@@ -1,0 +1,91 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- Helper functions ----------
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function role() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && role() == 'admin';
+    }
+
+    function isNurse() {
+      return isSignedIn() && role() == 'nurse';
+    }
+
+    function isStaff() {
+      return isAdmin() || isNurse();
+    }
+
+    // ---------- Users ----------
+    match /users/{uid} {
+      allow read: if isStaff();
+      allow write: if isAdmin();
+    }
+
+    // ---------- Patients ----------
+    match /patients/{patientId} {
+      allow read: if isStaff();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ---------- Beds ----------
+    match /beds/{bedId} {
+      allow read: if isStaff();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ---------- Robots ----------
+    match /robots/{robotId} {
+      allow read: if isStaff();
+      // Nurses can read status but not modify robot config
+      allow write: if isAdmin();
+    }
+
+    // ---------- Schedules ----------
+    match /schedules/{scheduleId} {
+      allow read: if isStaff();
+      allow write: if isAdmin();
+    }
+
+    // ---------- Deliveries ----------
+    match /deliveries/{deliveryId} {
+      allow read: if isStaff();
+      // Nurses can update status (complete/fail); only admins can create/delete
+      allow update: if isStaff()
+        && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['status', 'notes', 'completedAt']);
+      allow create, delete: if isAdmin();
+    }
+
+    // ---------- Scan Events ----------
+    match /scanEvents/{eventId} {
+      allow read: if isStaff();
+      // Only written by the backend API (Admin SDK bypasses rules)
+      allow write: if false;
+    }
+
+    // ---------- Alerts ----------
+    match /alerts/{alertId} {
+      allow read: if isStaff();
+      // Nurses can acknowledge (set resolved: true); only backend creates
+      allow update: if isStaff()
+        && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['resolved']);
+      allow create, delete: if false; // backend only
+    }
+
+    // ---------- Audit Logs ----------
+    match /auditLogs/{logId} {
+      allow read: if isAdmin();
+      // Never writable from client
+      allow write: if false;
+    }
+  }
+}
