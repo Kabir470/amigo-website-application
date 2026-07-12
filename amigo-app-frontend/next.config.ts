@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: "standalone",
+  ...(process.env.NEXT_STANDALONE === "1" ? { output: "standalone" } : {}),
   async headers() {
     return [
       {
@@ -32,11 +32,11 @@ const nextConfig: NextConfig = {
     ];
   },
   async rewrites() {
-    // In Docker (production), use the internal Docker DNS name. 
-    // Locally, use localhost.
-    const backendUrl = process.env.NODE_ENV === "production" 
-      ? "http://amigo-backend:8080" 
-      : "http://localhost:5065";
+    // Check for custom backend URL (Netlify/Vercel), default to Docker or localhost
+    const backendUrl = process.env.BACKEND_URL 
+      || (process.env.NODE_ENV === "production" 
+          ? "http://amigo-backend:8080" 
+          : "http://localhost:5065");
       
     return [
       {
