@@ -2,3 +2,7 @@
   base = "amigo-app-frontend"
   publish = ".next"
   command = "npm run build"
+
+[build.environment]
+  NEXT_PUBLIC_SUPABASE_URL = "https://xmapjrywkmygxwrctiyi.supabase.co"
+  NEXT_PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtYXBqcnl3a215Z3h3cmN0aXlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM4MTIyODIsImV4cCI6MjA5OTM4ODI4Mn0.boM4cXlCz4unZKALPHnQHnKrwCIg1XIh4acIDM4lP3Q"
