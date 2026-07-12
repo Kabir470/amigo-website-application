@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  amigo-backend:
+    build:
+      context: ./amigo-backend
+      dockerfile: Dockerfile
+    ports:
+      - "5065:8080" # Maps local 5065 to container's 8080
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+    env_file:
+      - ./amigo-backend/Amigo.Api/.env # Inject Supabase connection securely
+    restart: unless-stopped
+
+  amigo-frontend:
+    build:
+      context: ./amigo-app-frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+    depends_on:
+      - amigo-backend

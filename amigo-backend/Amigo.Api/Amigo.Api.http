@@ -1,0 +1,6 @@
+@Amigo.Api_HostAddress = http://localhost:5065
+
+GET {{Amigo.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

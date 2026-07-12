@@ -1,0 +1,14 @@
+# Build results
+[Bb]in/
+[Oo]bj/
+
+# Environment files
+.env
+.env.*
+.env.local
+
+# IDE
+.vs/
+.vscode/
+*.user
+*.suo
