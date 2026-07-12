@@ -1,10 +1,22 @@
+import { supabase } from "@/lib/supabase";
+
 const API_BASE = "/api/proxy";
 
+// This function is the SINGLE gateway for ALL API calls.
+// Before every request, it grabs the user's JWT from Supabase
+// and attaches it as an "Authorization: Bearer <token>" header.
+// The .NET backend reads this header and verifies the token.
 export async function apiFetch<T>(endpoint: string, options?: RequestInit): Promise<T> {
+  // Get the current session from Supabase (stored in localStorage)
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
+
   const res = await fetch(`${API_BASE}${endpoint}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",
+      // If we have a token, attach it. If not, the backend will return 401.
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options?.headers,
     },
   });

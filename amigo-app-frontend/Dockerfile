@@ -20,6 +20,12 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED 1
 ENV NEXT_STANDALONE 1
 
+# Supabase public keys — needed at build time because Next.js bakes
+# NEXT_PUBLIC_ variables into the JavaScript bundle during compilation.
+# These are PUBLIC keys (safe to include here).
+ENV NEXT_PUBLIC_SUPABASE_URL=https://xmapjrywkmygxwrctiyi.supabase.co
+ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtYXBqcnl3a215Z3h3cmN0aXlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM4MTIyODIsImV4cCI6MjA5OTM4ODI4Mn0.boM4cXlCz4unZKALPHnQHnKrwCIg1XIh4acIDM4lP3Q
+
 RUN npm run build
 
 # Production image, copy all the files and run next

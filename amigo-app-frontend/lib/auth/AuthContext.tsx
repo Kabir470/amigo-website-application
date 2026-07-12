@@ -1,65 +1,77 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { AppUser } from "@/types";
+import { supabase } from "@/lib/supabase";
+import type { Session, User } from "@supabase/supabase-js";
 
+// This context provides authentication state to the ENTIRE app.
+// Any component can call useAuth() to get the current user, session, or trigger login/logout.
 interface AuthContextType {
-  user: any | null;
-  appUser: AppUser | null;
-  loading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
+  user: User | null;           // The Supabase user object (contains email, id, etc.)
+  session: Session | null;     // The Supabase session (contains the access_token JWT)
+  loading: boolean;            // True while we check if user is already logged in
+  signIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  signUp: (email: string, password: string) => Promise<{ error: string | null }>;
   logOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
-  appUser: null,
+  session: null,
   loading: true,
-  signIn: async () => {},
+  signIn: async () => ({ error: null }),
+  signUp: async () => ({ error: null }),
   logOut: async () => {},
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<any | null>(null);
-  const [appUser, setAppUser] = useState<AppUser | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate loading session from local storage or just default to logged out
-    const savedUser = localStorage.getItem("amigo_user");
-    if (savedUser) {
-      const parsed = JSON.parse(savedUser);
-      setUser(parsed);
-      setAppUser(parsed);
-    }
-    setLoading(false);
+    // On app load, check if the user already has an active session (e.g., they refreshed the page).
+    // Supabase stores the session in localStorage automatically.
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    // Listen for auth state changes (login, logout, token refresh).
+    // Supabase automatically refreshes expired tokens in the background!
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+      }
+    );
+
+    // Cleanup the listener when the component unmounts
+    return () => subscription.unsubscribe();
   }, []);
 
+  // Sign in with email and password using Supabase Auth
   const signIn = async (email: string, password: string) => {
-    // Mock authentication for development
-    if (email && password) {
-      const mockUser = {
-        uid: "mock-uid-123",
-        email: email,
-        role: "admin",
-        firstName: "Admin",
-        lastName: "User"
-      } as unknown as AppUser;
-      
-      setUser(mockUser);
-      setAppUser(mockUser);
-      localStorage.setItem("amigo_user", JSON.stringify(mockUser));
-    }
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    return { error: error?.message ?? null };
   };
 
+  // Sign up a new user with email and password
+  const signUp = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signUp({ email, password });
+    return { error: error?.message ?? null };
+  };
+
+  // Sign out the user — clears the session from localStorage
   const logOut = async () => {
+    await supabase.auth.signOut();
     setUser(null);
-    setAppUser(null);
-    localStorage.removeItem("amigo_user");
+    setSession(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, appUser, loading, signIn, logOut }}>
+    <AuthContext.Provider value={{ user, session, loading, signIn, signUp, logOut }}>
       {children}
     </AuthContext.Provider>
   );

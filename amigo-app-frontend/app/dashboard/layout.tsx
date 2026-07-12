@@ -1,10 +1,11 @@
 "use client";
 
 import Sidebar from "@/components/Sidebar";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import { useRouter } from "next/navigation";
-import { Bell, User, LogOut, Shield } from "lucide-react";
+import { useAuth } from "@/lib/auth/AuthContext";
+import { Bell, LogOut, Shield } from "lucide-react";
 
 export default function DashboardLayout({
   children,
@@ -12,21 +13,25 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const { user, session, loading: authLoading, logOut } = useAuth();
   const [alerts, setAlerts] = useState<any[]>([]);
-  const [currentUser, setCurrentUser] = useState<any>(null);
   
   const [showNotifs, setShowNotifs] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
 
+  // Redirect to login if not authenticated
   useEffect(() => {
+    if (!authLoading && !session) {
+      router.replace("/login");
+    }
+  }, [authLoading, session, router]);
+
+  useEffect(() => {
+    if (!session) return; // Don't fetch data if not logged in
     async function loadGlobalData() {
       try {
-        const [activeAlerts, users] = await Promise.all([
-          api.getActiveAlerts(),
-          api.getUsers(),
-        ]);
+        const activeAlerts = await api.getActiveAlerts();
         setAlerts(activeAlerts);
-        if (users.length > 0) setCurrentUser(users[0]);
       } catch (e) {
         console.error("Layout fetch error:", e);
       }
@@ -34,11 +39,11 @@ export default function DashboardLayout({
     loadGlobalData();
     const interval = setInterval(loadGlobalData, 15000);
     return () => clearInterval(interval);
-  }, []);
+  }, [session]);
 
-  const initials = currentUser?.displayName
-    ? currentUser.displayName.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()
-    : "..";
+  // Extract initials from email (e.g., "john.doe@hospital.org" -> "JD")
+  const emailName = user?.email?.split("@")[0] || "";
+  const initials = emailName.split(".").map(p => p[0]?.toUpperCase() || "").join("").slice(0, 2) || "?";
 
   return (
     <div id="app">
@@ -92,8 +97,8 @@ export default function DashboardLayout({
               <div className="user-chip" onClick={() => { setShowProfile(!showProfile); setShowNotifs(false); }}>
                 <div className="avatar">{initials}</div>
                 <div>
-                  <div className="name">{currentUser?.displayName || "Loading..."}</div>
-                  <div className="role capitalize">{currentUser?.role || "—"}</div>
+                <div className="name">{user?.email?.split("@")[0] || "User"}</div>
+                  <div className="role capitalize">Authenticated</div>
                 </div>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-soft)" strokeWidth="2"><path d="M6 9l6 6 6-6"/></svg>
               </div>
@@ -101,13 +106,13 @@ export default function DashboardLayout({
               {showProfile && (
                 <div className="glass-card" style={{ position: "absolute", top: "50px", right: "0", width: "220px", padding: "8px", zIndex: 50 }}>
                   <div style={{ padding: "8px 12px", borderBottom: "1px solid var(--border)", marginBottom: "8px" }}>
-                    <div style={{ fontSize: "14px", color: "#fff", fontWeight: "600" }}>{currentUser?.displayName}</div>
-                    <div style={{ fontSize: "12px", color: "var(--ink-soft)" }}>{currentUser?.email}</div>
+                    <div style={{ fontSize: "14px", color: "#fff", fontWeight: "600" }}>{user?.email?.split("@")[0]}</div>
+                    <div style={{ fontSize: "12px", color: "var(--ink-soft)" }}>{user?.email}</div>
                   </div>
                   <button className="nav-item" onClick={() => router.push('/dashboard/users')} style={{ width: "100%", border: "none", background: "none", padding: "10px 12px" }}>
                     <Shield className="w-4 h-4" /> Manage Access
                   </button>
-                  <button className="nav-item" onClick={() => router.push('/login')} style={{ width: "100%", border: "none", background: "none", padding: "10px 12px", color: "#ef4444" }}>
+                  <button className="nav-item" onClick={async () => { await logOut(); router.push('/login'); }} style={{ width: "100%", border: "none", background: "none", padding: "10px 12px", color: "#ef4444" }}>
                     <LogOut className="w-4 h-4" /> Sign Out
                   </button>
                 </div>

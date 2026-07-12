@@ -2,36 +2,45 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-
-// Demo credentials
-const DEMO_EMAIL = "elena.vance@amigo.care";
-const DEMO_PASSWORD = "demo";
+import { useAuth } from "@/lib/auth/AuthContext";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { signIn, signUp } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [successMsg, setSuccessMsg] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError("");
-    // Simulate network delay
-    await new Promise((r) => setTimeout(r, 600));
-    if (email === DEMO_EMAIL && password === DEMO_PASSWORD) {
-      router.push("/dashboard");
-    } else {
-      setError("Invalid credentials. Use the demo credentials below.");
-      setLoading(false);
-    }
-  }
+    setSuccessMsg("");
 
-  function fillDemo() {
-    setEmail(DEMO_EMAIL);
-    setPassword(DEMO_PASSWORD);
-    setError("");
+    if (isSignUp) {
+      // Sign Up: Creates a new user in Supabase Auth
+      const { error } = await signUp(email, password);
+      if (error) {
+        setError(error);
+      } else {
+        setSuccessMsg("Account created! Check your email to confirm, then sign in.");
+        setIsSignUp(false);
+      }
+      setLoading(false);
+    } else {
+      // Sign In: Authenticates with Supabase and receives a JWT
+      const { error } = await signIn(email, password);
+      if (error) {
+        setError(error);
+        setLoading(false);
+      } else {
+        // Successful login — redirect to dashboard
+        router.push("/dashboard");
+      }
+    }
   }
 
   return (
@@ -81,8 +90,12 @@ export default function LoginPage() {
       {/* Form Side */}
       <div className="flex-1 flex items-center justify-center p-8" style={{ background: "rgba(11, 17, 33, 0.5)", backdropFilter: "blur(20px)" }}>
         <div className="glass-card w-full max-w-md p-8">
-          <h2 className="text-2xl font-bold text-white mb-2">Welcome back</h2>
-          <p className="text-slate-400 text-sm mb-8">Sign in to the Amigo admin panel.</p>
+          <h2 className="text-2xl font-bold text-white mb-2">
+            {isSignUp ? "Create Account" : "Welcome back"}
+          </h2>
+          <p className="text-slate-400 text-sm mb-8">
+            {isSignUp ? "Sign up for the Amigo admin panel." : "Sign in to the Amigo admin panel."}
+          </p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
@@ -115,17 +128,25 @@ export default function LoginPage() {
               />
             </div>
 
-            <div className="flex justify-between items-center text-sm">
-              <label className="flex items-center gap-2 text-slate-400 cursor-pointer">
-                <input type="checkbox" defaultChecked className="accent-blue-500 w-4 h-4 rounded bg-slate-800" />
-                Remember me
-              </label>
-              <a href="#" className="text-blue-400 hover:text-blue-300 font-medium transition-colors">Forgot password?</a>
-            </div>
+            {!isSignUp && (
+              <div className="flex justify-between items-center text-sm">
+                <label className="flex items-center gap-2 text-slate-400 cursor-pointer">
+                  <input type="checkbox" defaultChecked className="accent-blue-500 w-4 h-4 rounded bg-slate-800" />
+                  Remember me
+                </label>
+                <a href="#" className="text-blue-400 hover:text-blue-300 font-medium transition-colors">Forgot password?</a>
+              </div>
+            )}
 
             {error && (
               <div className="px-4 py-3 rounded-xl text-sm" style={{ background: "rgba(239,68,68,0.1)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.2)" }}>
                 {error}
+              </div>
+            )}
+
+            {successMsg && (
+              <div className="px-4 py-3 rounded-xl text-sm" style={{ background: "rgba(16,185,129,0.1)", color: "#10b981", border: "1px solid rgba(16,185,129,0.2)" }}>
+                {successMsg}
               </div>
             )}
 
@@ -135,12 +156,16 @@ export default function LoginPage() {
               className="w-full py-3 rounded-xl text-sm font-bold text-white transition-all transform active:scale-95"
               style={{ background: "linear-gradient(135deg, #3b82f6, #06b6d4)", boxShadow: "0 4px 20px rgba(59,130,246,0.3)" }}
             >
-              {loading ? "Signing in..." : "Sign in"}
+              {loading ? (isSignUp ? "Creating account..." : "Signing in...") : (isSignUp ? "Create Account" : "Sign in")}
             </button>
           </form>
 
-          <div className="mt-8 px-4 py-3 rounded-xl text-sm" style={{ background: "rgba(59,130,246,0.1)", color: "#94a3b8", border: "1px solid rgba(59,130,246,0.2)" }}>
-            <b className="text-blue-400">Demo Note —</b> Use <b className="text-white">{DEMO_EMAIL}</b> and <b className="text-white">{DEMO_PASSWORD}</b> to sign in, or click <button type="button" onClick={fillDemo} className="text-cyan-400 hover:text-cyan-300 font-bold underline transition-colors">here</button> to auto-fill.
+          <div className="mt-6 text-center text-sm text-slate-400">
+            {isSignUp ? (
+              <>Already have an account? <button onClick={() => { setIsSignUp(false); setError(""); setSuccessMsg(""); }} className="text-cyan-400 hover:text-cyan-300 font-bold transition-colors">Sign in</button></>
+            ) : (
+              <>Don&apos;t have an account? <button onClick={() => { setIsSignUp(true); setError(""); setSuccessMsg(""); }} className="text-cyan-400 hover:text-cyan-300 font-bold transition-colors">Sign up</button></>
+            )}
           </div>
         </div>
       </div>
