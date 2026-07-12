@@ -1,0 +1,4 @@
+[build]
+  base = "amigo-app-frontend"
+  publish = ".next"
+  command = "npm run build"
