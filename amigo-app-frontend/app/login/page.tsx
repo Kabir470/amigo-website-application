@@ -1,18 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, session, loading: authLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
+
+  // Redirect to dashboard if already logged in
+  useEffect(() => {
+    if (!authLoading && session) {
+      router.replace("/dashboard");
+    }
+  }, [session, authLoading, router]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -25,11 +32,12 @@ export default function LoginPage() {
       const { error } = await signUp(email, password);
       if (error) {
         setError(error);
+        setLoading(false);
       } else {
-        setSuccessMsg("Account created! Check your email to confirm, then sign in.");
-        setIsSignUp(false);
+        // Since email confirmations are off, Supabase logs them in immediately.
+        // The useEffect above will detect the new session and redirect them.
+        setSuccessMsg("Account created! Redirecting to dashboard...");
       }
-      setLoading(false);
     } else {
       // Sign In: Authenticates with Supabase and receives a JWT
       const { error } = await signIn(email, password);
@@ -38,7 +46,7 @@ export default function LoginPage() {
         setLoading(false);
       } else {
         // Successful login — redirect to dashboard
-        router.push("/dashboard");
+        router.replace("/dashboard");
       }
     }
   }

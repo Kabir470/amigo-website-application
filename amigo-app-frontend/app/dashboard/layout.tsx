@@ -112,7 +112,7 @@ export default function DashboardLayout({
                   <button className="nav-item" onClick={() => router.push('/dashboard/users')} style={{ width: "100%", border: "none", background: "none", padding: "10px 12px" }}>
                     <Shield className="w-4 h-4" /> Manage Access
                   </button>
-                  <button className="nav-item" onClick={async () => { await logOut(); router.push('/login'); }} style={{ width: "100%", border: "none", background: "none", padding: "10px 12px", color: "#ef4444" }}>
+                  <button className="nav-item" onClick={async () => { await logOut(); router.replace('/login'); }} style={{ width: "100%", border: "none", background: "none", padding: "10px 12px", color: "#ef4444" }}>
                     <LogOut className="w-4 h-4" /> Sign Out
                   </button>
                 </div>
