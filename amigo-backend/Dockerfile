@@ -1,6 +1,6 @@
 # Stage 1: Build the application
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
-WORKDIR /src
+WORKDIR /container-workspace
 
 # Copy csproj and restore as distinct layers
 COPY ["Amigo.Api/Amigo.Api.csproj", "Amigo.Api/"]
@@ -11,7 +11,7 @@ RUN dotnet restore "Amigo.Api/Amigo.Api.csproj"
 
 # Copy everything else and build
 COPY . .
-WORKDIR "/src/Amigo.Api"
+WORKDIR "/container-workspace/Amigo.Api"
 RUN dotnet publish "Amigo.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Stage 2: Create the runtime image
