@@ -26,7 +26,16 @@ export async function apiFetch<T>(endpoint: string, options?: RequestInit): Prom
   }
   // Handle 204 No Content (for DELETE responses)
   if (res.status === 204) return undefined as T;
-  return res.json();
+  
+  const text = await res.text();
+  if (!text) return undefined as T;
+  
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    console.error("Failed to parse JSON response:", text);
+    throw new Error(`Invalid JSON response: ${text}`);
+  }
 }
 
 export const api = {

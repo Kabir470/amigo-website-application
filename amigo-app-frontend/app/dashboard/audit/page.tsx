@@ -3,7 +3,9 @@
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import { formatTimestamp } from "@/lib/utils";
-import { FileText, Search } from "lucide-react";
+import { IconFile } from "@/components/icons";
+import { Card, inputClass } from "@/components/ui";
+import { Search } from "lucide-react";
 
 interface AuditEntry {
   action: string;
@@ -87,60 +89,69 @@ export default function AuditPage() {
   );
 
   function actionColor(action: string): string {
-    if (action.includes("delete") || action.includes("fail") || action.includes("triggered")) return "#ef4444";
-    if (action.includes("config") || action.includes("command")) return "#f59e0b";
-    if (action.includes("create") || action.includes("complete") || action.includes("resolved")) return "#10b981";
-    return "#94a3b8";
+    if (action.includes("delete") || action.includes("fail") || action.includes("triggered")) return "text-coral-600 bg-coral-50 border-coral-200";
+    if (action.includes("config") || action.includes("command")) return "text-amber-600 bg-amber-50 border-amber-200";
+    if (action.includes("create") || action.includes("complete") || action.includes("resolved")) return "text-emerald-600 bg-emerald-50 border-emerald-200";
+    return "text-slate-650 bg-mist border-slate-200";
   }
 
   if (loading) return <div className="p-6 text-slate-400">Loading audit logs...</div>;
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <FileText className="w-6 h-6" style={{ color: "#3b82f6" }} />
-          <h1 className="text-2xl font-bold text-white">Audit Log</h1>
-          <span className="text-xs px-2 py-1 rounded-full"
-            style={{ background: "rgba(59,130,246,0.1)", color: "#3b82f6", border: "1px solid rgba(59,130,246,0.2)" }}>
-            {logs.length} entries
-          </span>
+    <div>
+      <div className="mb-6 flex items-start justify-between">
+        <div className="flex items-start gap-3">
+          <div className="flex h-11 w-11 flex-none items-center justify-center rounded-xl bg-teal-50 text-teal-600">
+            <IconFile className="h-5 w-5" />
+          </div>
+          <div>
+            <h1 className="font-display text-2xl font-semibold text-ink">Audit Log</h1>
+            <p className="text-sm text-slate-650">Every dispatch, alert, and account action recorded by the system.</p>
+          </div>
         </div>
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "#475569" }} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input type="text" placeholder="Search logs…" value={search} onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 pr-4 py-2 rounded-xl text-sm text-white outline-none w-56"
-            style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(59,130,246,0.2)" }} />
+            className={`${inputClass} pl-9 w-64`} />
         </div>
       </div>
 
-      <div className="glass-card overflow-hidden">
-        <table className="w-full">
-          <thead>
-            <tr style={{ borderBottom: "1px solid rgba(59,130,246,0.1)" }}>
-              {["Time", "User", "Action", "Target", "Details"].map(h => (
-                <th key={h} className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider" style={{ color: "#475569" }}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.length === 0 ? (
-              <tr><td colSpan={5} className="text-center py-10 text-slate-500">No audit logs match your search.</td></tr>
-            ) : filtered.map((l, i) => (
-              <tr key={i} className="border-b hover:bg-white/[0.02]" style={{ borderColor: "rgba(255,255,255,0.04)" }}>
-                <td className="px-4 py-3 text-xs text-slate-400 whitespace-nowrap">{formatTimestamp(l.timestamp)}</td>
-                <td className="px-4 py-3 text-xs font-medium text-slate-300">{l.user}</td>
-                <td className="px-4 py-3">
-                  <span className="text-xs font-mono px-2 py-0.5 rounded"
-                    style={{ color: actionColor(l.action), background: `${actionColor(l.action)}15` }}>{l.action}</span>
-                </td>
-                <td className="px-4 py-3 text-xs font-mono text-slate-500">{l.target}</td>
-                <td className="px-4 py-3 text-xs text-slate-400 max-w-xs truncate">{l.details}</td>
+      <Card className="overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="text-xs uppercase tracking-wide text-slate-650/60 border-b border-teal-900/5">
+                <th className="px-6 py-3 font-medium">Time</th>
+                <th className="px-3 py-3 font-medium">User</th>
+                <th className="px-3 py-3 font-medium">Action</th>
+                <th className="px-3 py-3 font-medium">Target</th>
+                <th className="px-6 py-3 font-medium">Details</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody className="divide-y divide-teal-900/5">
+              {filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-8 text-center text-slate-650">
+                    No activity recorded yet.
+                  </td>
+                </tr>
+              ) : filtered.map((l, i) => (
+                <tr key={i} className="transition hover:bg-mist">
+                  <td className="px-6 py-4 whitespace-nowrap text-xs text-slate-650">{formatTimestamp(l.timestamp)}</td>
+                  <td className="px-3 py-4 font-medium text-ink">{l.user}</td>
+                  <td className="px-3 py-4">
+                    <span className={`text-xs font-mono px-2 py-0.5 rounded border ${actionColor(l.action)}`}>
+                      {l.action}
+                    </span>
+                  </td>
+                  <td className="px-3 py-4 text-xs font-mono text-slate-500">{l.target}</td>
+                  <td className="px-6 py-4 text-xs text-slate-650 max-w-xs truncate">{l.details}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
     </div>
   );
 }

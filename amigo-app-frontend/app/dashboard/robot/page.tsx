@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
-import { formatTimestamp, batteryColor } from "@/lib/utils";
+import { Button, Card, StatusPill } from "@/components/ui";
+import { IconRobot } from "@/components/icons";
 import {
-  Bot,
   Wifi,
   WifiOff,
   Zap,
@@ -17,6 +17,7 @@ import {
   Route,
   AlertTriangle,
 } from "lucide-react";
+import { batteryColor } from "@/lib/utils";
 
 interface ApiRobot {
   id: number;
@@ -97,44 +98,45 @@ export default function RobotPage() {
   if (loading) return <div className="p-6 text-slate-400">Loading robots from database...</div>;
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center gap-3">
-        <Bot className="w-6 h-6" style={{ color: "#06b6d4" }} />
-        <h1 className="text-2xl font-bold text-white">Robot Monitor & Control</h1>
+    <div>
+      <div className="mb-6 flex items-start gap-3">
+        <div className="flex h-11 w-11 flex-none items-center justify-center rounded-xl bg-teal-50 text-teal-600">
+          <IconRobot className="h-5 w-5" />
+        </div>
+        <div>
+          <h1 className="font-display text-2xl font-semibold text-ink">Robot Monitor & Control</h1>
+          <p className="text-sm text-slate-650">Live diagnostics, configuration, and manual overrides for the fleet.</p>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Robot list */}
         <div className="space-y-3">
-          <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "#475569" }}>Fleet</p>
+          <p className="text-xs font-semibold uppercase tracking-wider mb-2 text-slate-650">Fleet</p>
           {robots.map((r) => (
             <button
               key={r.id}
-              id={`robot-card-${r.id}`}
               onClick={() => selectRobot(r)}
-              className="w-full glass-card p-4 text-left transition-all hover:scale-[1.01]"
-              style={selected?.id === r.id ? { border: "1px solid rgba(6,182,212,0.4)" } : {}}
+              className="w-full text-left transition-all hover:scale-[1.01]"
             >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-                    style={{ background: r.status === "Active" ? "rgba(16,185,129,0.1)" : "rgba(239,68,68,0.1)" }}>
-                    <Bot className="w-5 h-5" style={{ color: r.status === "Active" ? "#10b981" : "#ef4444" }} />
+              <Card className="p-4" style={selected?.id === r.id ? { border: "2px solid var(--teal-500)" } : {}}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-teal-50">
+                      <IconRobot className="w-5 h-5 text-teal-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-ink">{r.name}</p>
+                      <p className="text-xs text-slate-650/70">{r.ward?.name || "Unassigned"}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-white">{r.name}</p>
-                    <p className="text-xs text-slate-500">{r.ward?.name || "Unassigned"}</p>
-                  </div>
+                  <StatusPill status={r.status} />
                 </div>
-                <span className={`text-xs px-2 py-1 rounded-full`}
-                  style={{ background: r.status === "Active" ? "rgba(16,185,129,0.1)" : "rgba(239,68,68,0.1)", color: r.status === "Active" ? "#10b981" : "#ef4444" }}>
-                  {r.status}
-                </span>
-              </div>
-              <div className="flex items-center gap-1 mt-3 text-xs font-medium" style={{ color: batteryColor(r.batteryLevel) }}>
-                <Zap className="w-3 h-3" />
-                {r.batteryLevel}% battery
-              </div>
+                <div className="flex items-center gap-1 mt-3 text-xs font-medium" style={{ color: batteryColor(r.batteryLevel) }}>
+                  <Zap className="w-3 h-3" />
+                  {r.batteryLevel}% battery
+                </div>
+              </Card>
             </button>
           ))}
         </div>
@@ -142,19 +144,16 @@ export default function RobotPage() {
         {/* Detail panel */}
         {selected && (
           <div className="lg:col-span-2 space-y-4">
-            <div className="glass-card p-5">
+            <Card className="p-5">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="font-semibold text-white text-lg">{selected.name}</h2>
+                <h2 className="font-semibold text-ink text-lg">{selected.name}</h2>
                 <div className="flex items-center gap-2">
                   {selected.status === "Active" ? (
-                    <Wifi className="w-4 h-4" style={{ color: "#10b981" }} />
+                    <Wifi className="w-4 h-4 text-emerald-500" />
                   ) : (
-                    <WifiOff className="w-4 h-4" style={{ color: "#ef4444" }} />
+                    <WifiOff className="w-4 h-4 text-coral-500" />
                   )}
-                  <span className="text-sm font-medium px-3 py-1 rounded-full"
-                    style={{ background: selected.status === "Active" ? "rgba(16,185,129,0.1)" : "rgba(239,68,68,0.1)", color: selected.status === "Active" ? "#10b981" : "#ef4444" }}>
-                    {selected.status}
-                  </span>
+                  <StatusPill status={selected.status} />
                 </div>
               </div>
 
@@ -167,46 +166,44 @@ export default function RobotPage() {
                   { label: "Max Speed", value: selected.maxSpeed ? `${selected.maxSpeed} m/s` : "—", icon: Route, color: "#f59e0b" },
                   { label: "Ward", value: selected.ward?.name || "—", icon: AlertTriangle, color: "#94a3b8" },
                 ].map((s) => (
-                  <div key={s.label} className="rounded-xl p-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                  <div key={s.label} className="rounded-xl p-3 bg-mist border border-teal-900/5">
                     <div className="flex items-center gap-1.5 mb-1">
                       <s.icon className="w-3.5 h-3.5" style={{ color: s.color }} />
-                      <p className="text-xs" style={{ color: "#475569" }}>{s.label}</p>
+                      <p className="text-xs text-slate-650">{s.label}</p>
                     </div>
-                    <p className="text-sm font-semibold text-white">{s.value}</p>
+                    <p className="text-sm font-semibold text-ink">{s.value}</p>
                   </div>
                 ))}
               </div>
-            </div>
+            </Card>
 
             {/* Controls */}
-            <div className="glass-card p-5">
+            <Card className="p-5">
               <div className="flex items-center gap-2 mb-4">
-                <Cpu className="w-4 h-4" style={{ color: "#3b82f6" }} />
-                <h3 className="font-medium text-white">Manual Override Controls</h3>
-                <span className="text-xs ml-auto px-2 py-0.5 rounded-full"
-                  style={{ background: "rgba(239,68,68,0.1)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.2)" }}>
+                <Cpu className="w-4 h-4 text-teal-600" />
+                <h3 className="font-medium text-ink">Manual Override Controls</h3>
+                <span className="text-xs ml-auto px-2 py-0.5 rounded-full bg-coral-500/10 text-coral-600 border border-coral-500/20">
                   Admin Only
                 </span>
               </div>
               <div className="flex flex-wrap gap-3">
                 {[
-                  { cmd: "resume" as const, label: "Resume", icon: Play, color: "#10b981", bg: "rgba(16,185,129,0.1)", border: "rgba(16,185,129,0.3)" },
-                  { cmd: "pause" as const, label: "Pause", icon: Pause, color: "#f59e0b", bg: "rgba(245,158,11,0.1)", border: "rgba(245,158,11,0.3)" },
-                  { cmd: "stop" as const, label: "Stop", icon: Square, color: "#ef4444", bg: "rgba(239,68,68,0.1)", border: "rgba(239,68,68,0.3)" },
-                  { cmd: "return-to-base" as const, label: "Return to Base", icon: Home, color: "#06b6d4", bg: "rgba(6,182,212,0.1)", border: "rgba(6,182,212,0.3)" },
+                  { cmd: "resume" as const, label: "Resume", icon: Play, color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-200" },
+                  { cmd: "pause" as const, label: "Pause", icon: Pause, color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-200" },
+                  { cmd: "stop" as const, label: "Stop", icon: Square, color: "text-coral-600", bg: "bg-coral-50", border: "border-coral-200" },
+                  { cmd: "return-to-base" as const, label: "Return to Base", icon: Home, color: "text-teal-600", bg: "bg-teal-50", border: "border-teal-200" },
                 ].map(({ cmd, label, icon: Icon, color, bg, border }) => (
-                  <button key={cmd} id={`robot-cmd-${cmd}`} onClick={() => sendCommand(cmd)}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all"
-                    style={{ background: bg, color, border: `1px solid ${border}` }}>
+                  <button key={cmd} onClick={() => sendCommand(cmd)}
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${bg} ${color} border ${border} hover:scale-[1.02]`}>
                     <Icon className="w-4 h-4" />
                     {label}
                   </button>
                 ))}
               </div>
-              <p className="text-xs mt-3" style={{ color: "#475569" }}>
-                Commands are persisted to the Supabase database in real-time.
+              <p className="text-xs mt-3 text-slate-650/70">
+                Commands are persisted to the database in real-time. Use this if a delivery gets stuck.
               </p>
-            </div>
+            </Card>
 
             {/* Config */}
             <RobotConfigEditor robot={selected} onSave={pushConfig} />
@@ -229,27 +226,29 @@ function RobotConfigEditor({ robot, onSave }: { robot: ApiRobot; onSave: (sensit
   }
 
   return (
-    <div className="glass-card p-5">
-      <h3 className="font-medium text-white mb-4">Line-Following Configuration</h3>
+    <Card className="p-5">
+      <h3 className="font-medium text-ink mb-4">Firmware & Line-Following Configuration</h3>
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div>
-          <label className="block text-xs font-medium mb-1.5" style={{ color: "#94a3b8" }}>
-            Sensor Sensitivity: <span style={{ color: "#3b82f6" }}>{sensitivity}</span>
+          <label className="block text-xs font-medium mb-1.5 text-slate-650">
+            Sensor Sensitivity: <span className="text-teal-600 font-bold">{sensitivity}</span>
           </label>
-          <input type="range" min={10} max={100} value={sensitivity} onChange={(e) => setSensitivity(Number(e.target.value))} className="w-full accent-blue-500" />
+          <input type="range" min={10} max={100} value={sensitivity} onChange={(e) => setSensitivity(Number(e.target.value))} className="w-full accent-teal-600" />
         </div>
         <div>
-          <label className="block text-xs font-medium mb-1.5" style={{ color: "#94a3b8" }}>
-            Max Speed (m/s): <span style={{ color: "#3b82f6" }}>{maxSpeed}</span>
+          <label className="block text-xs font-medium mb-1.5 text-slate-650">
+            Max Speed (m/s): <span className="text-teal-600 font-bold">{maxSpeed}</span>
           </label>
-          <input type="range" min={0.1} max={2} step={0.1} value={maxSpeed} onChange={(e) => setMaxSpeed(Number(e.target.value))} className="w-full accent-blue-500" />
+          <input type="range" min={0.1} max={2} step={0.1} value={maxSpeed} onChange={(e) => setMaxSpeed(Number(e.target.value))} className="w-full accent-teal-600" />
         </div>
       </div>
-      <button id="save-robot-config" onClick={save}
-        className="px-4 py-2 rounded-xl text-sm font-medium text-white transition-all"
-        style={{ background: saved ? "linear-gradient(135deg,#10b981,#059669)" : "linear-gradient(135deg,#3b82f6,#06b6d4)" }}>
+      <Button onClick={save}>
         {saved ? "✓ Config Applied to DB" : "Push Config to Robot"}
-      </button>
-    </div>
+      </Button>
+      <p className="mt-3 text-xs text-slate-650/70">
+        Motor speed, PID line-following gains, and corridor map editing will live here once the
+        hardware team wires up the config endpoint on the robot's onboard controller.
+      </p>
+    </Card>
   );
 }

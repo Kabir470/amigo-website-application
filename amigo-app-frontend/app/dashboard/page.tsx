@@ -1,8 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
+import { supabase } from "@/lib/supabase";
+import { Button, Card, StatusPill } from "@/components/ui";
 
 interface Robot {
   id: number;
@@ -21,6 +24,7 @@ interface Patient {
   condition: string;
   ward: { name: string } | null;
   assignedRobot: { name: string } | null;
+  nfcTag?: string | null;
 }
 
 interface Delivery {
@@ -46,6 +50,9 @@ export default function DashboardPage() {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  
+  // Realtime scan state
+  const [latestScanPayload, setLatestScanPayload] = useState<{ tag: string, robotId: number, time: Date, id: number } | null>(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -75,243 +82,207 @@ export default function DashboardPage() {
     return () => clearInterval(interval);
   }, []);
 
-  const activeRobotsCount = robots.filter(r => r.status === 'Active' || r.status === 'En route').length;
-  const completedDeliveries = deliveries.filter(d => d.status === 'Completed').length;
-  const pendingDeliveries = deliveries.filter(d => d.status !== 'Completed').length;
-
-  // Dynamically group rooms by ward based on patients data
-  const wardMap = patients.reduce((acc, p) => {
-    const wName = p.ward?.name || "Unassigned Ward";
-    if (!acc[wName]) acc[wName] = [];
-    if (p.roomNumber && !acc[wName].includes(p.roomNumber)) {
-      acc[wName].push(p.roomNumber);
-    }
-    return acc;
-  }, {} as Record<string, string[]>);
-
-  const availableWards = Object.keys(wardMap).sort();
-  const [selectedWard, setSelectedWard] = useState<string>("");
-
+  // Subscribe to real-time RFID scans
   useEffect(() => {
-    if (availableWards.length > 0 && !selectedWard) {
-      setSelectedWard(availableWards[0]);
+    const channel = supabase.channel('rfid_scans_changes')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'rfid_scans' }, (payload) => {
+        setLatestScanPayload({ 
+          tag: payload.new.rfid_tag, 
+          robotId: payload.new.robot_id, 
+          time: new Date(payload.new.scanned_at || Date.now()),
+          id: payload.new.id
+        });
+      })
+      .subscribe();
+      
+    return () => { supabase.removeChannel(channel); };
+  }, []);
+
+  // Auto-dismiss the scan overlay after 15 seconds to return to "Scanning" state
+  useEffect(() => {
+    if (latestScanPayload) {
+      const timer = setTimeout(() => {
+        setLatestScanPayload(prev => prev?.id === latestScanPayload.id ? null : prev);
+      }, 15000);
+      return () => clearTimeout(timer);
     }
-  }, [availableWards, selectedWard]);
+  }, [latestScanPayload]);
 
-  // Rooms from DB for selected ward — marked as real or empty
-  const dbRooms: string[] = selectedWard && wardMap[selectedWard] ? [...wardMap[selectedWard]].sort() : [];
-  // Pad with null sentinels to always show 6 slots minimum
-  const MIN_SLOTS = 6;
-  const padded: (string | null)[] = [...dbRooms];
-  while (padded.length < MIN_SLOTS) padded.push(null);
-
-  const midPoint = Math.ceil(padded.length / 2);
-  const wardRoomsRow1 = padded.slice(0, midPoint);
-  const wardRoomsRow2 = padded.slice(midPoint);
-
-  const checkRobotInRoom = (roomNum: string | null) => {
-    if (!roomNum) return null;
-    return robots.find(r => r.currentLocation?.includes(roomNum) && r.status !== 'Maintenance') || null;
-  };
-
-  function batteryColor(level: number) {
-    if (level > 50) return '#10b981';
-    if (level > 20) return '#f59e0b';
-    return '#ef4444';
-  }
-
-  function statusStyle(status: string): React.CSSProperties {
-    if (status === 'Active') return { background: 'rgba(16,185,129,0.15)', color: '#10b981', border: '1px solid rgba(16,185,129,0.3)' };
-    if (status === 'En route') return { background: 'rgba(59,130,246,0.15)', color: '#3b82f6', border: '1px solid rgba(59,130,246,0.3)' };
-    if (status === 'Charging') return { background: 'rgba(245,158,11,0.15)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.3)' };
-    return { background: 'rgba(148,163,184,0.1)', color: '#94a3b8', border: '1px solid rgba(148,163,184,0.2)' };
-  }
+  const scannedPatient = latestScanPayload ? patients.find(p => p.nfcTag === latestScanPayload.tag) : null;
+  const completedDeliveries = deliveries.filter(d => d.status === 'Completed').length;
+  const pendingDeliveries = deliveries.filter(d => d.status !== 'Completed');
+  
+  // Just take the first robot for the main status card, or mock if none
+  const mainRobot = robots[0] || null;
 
   return (
-    <>
-      <div className="page-head">
+    <div>
+      <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1>Dashboard Overview</h1>
-          <p>Live status across every ward, robot and patient.</p>
-          {fetchError && <p style={{ color: "red", marginTop: "4px" }}>{fetchError} (Check terminal/Next.config CSP)</p>}
+          <h1 className="font-display text-2xl font-semibold text-ink">Ward overview</h1>
+          <p className="text-sm text-slate-650">
+            {new Date().toLocaleDateString(undefined, {
+              weekday: "long",
+              month: "long",
+              day: "numeric",
+            })}
+          </p>
+          {fetchError && <p className="text-sm text-coral-500 mt-2">{fetchError}</p>}
         </div>
       </div>
 
-      <div className="stat-grid">
-        <div className="stat-card">
-          <div className="stat-top"><span className="label">Amigo Robots Online</span>
-            <div className="stat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="4" y="8" width="16" height="12" rx="3"/><circle cx="9" cy="14" r="1" fill="currentColor"/><circle cx="15" cy="14" r="1" fill="currentColor"/></svg></div>
-          </div>
-          <div className="stat-value">{loading ? "..." : `${activeRobotsCount}/${robots.length}`}</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-top"><span className="label">Patients Monitored</span>
-            <div className="stat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="9" cy="8" r="3"/><path d="M3 19c1-3.4 3.4-5 6-5s5 1.6 6 5"/></svg></div>
-          </div>
-          <div className="stat-value">{loading ? "..." : patients.length}</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-top"><span className="label">Pending Dispenses</span>
-            <div className="stat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="4" y="10" width="16" height="7" rx="3.5" transform="rotate(-45 12 13.5)"/></svg></div>
-          </div>
-          <div className="stat-value">{loading ? "..." : pendingDeliveries}</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-top"><span className="label">Completed Deliveries</span>
-            <div className="stat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg></div>
-          </div>
-          <div className="stat-value">{loading ? "..." : completedDeliveries}</div>
-        </div>
-        <div className={`stat-card ${alerts.length > 0 ? 'alert' : ''}`}>
-          <div className="stat-top"><span className="label">Active Alerts</span>
-            <div className="stat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17h.01"/></svg></div>
-          </div>
-          <div className="stat-value" style={{ color: alerts.length > 0 ? '#f87171' : 'var(--ink)' }}>
-            {loading ? "..." : `${alerts.length} ${alerts.length === 1 ? 'Alert' : 'Alerts'}`}
-          </div>
-        </div>
+      <div className="grid grid-cols-3 gap-4">
+        <Card className="p-5">
+          <p className="text-xs font-medium text-slate-650">Active patients</p>
+          <p className="mt-1.5 font-display text-3xl font-semibold text-ink">{loading ? "..." : patients.length}</p>
+        </Card>
+        <Card className="p-5">
+          <p className="text-xs font-medium text-slate-650">Delivered today</p>
+          <p className="mt-1.5 font-display text-3xl font-semibold text-ink">{loading ? "..." : completedDeliveries}</p>
+        </Card>
+        <Card className="p-5">
+          <p className="text-xs font-medium text-slate-650">Unread alerts</p>
+          <p className="mt-1.5 font-display text-3xl font-semibold text-ink">{loading ? "..." : alerts.length}</p>
+        </Card>
       </div>
 
-      <div className="grid-2">
-        <div className="card">
-          <div className="card-head">
-            <h3>Facility Map &amp; Robot Status</h3>
-            <select 
-              className="select-mini" 
-              value={selectedWard} 
-              onChange={(e) => setSelectedWard(e.target.value)}
-            >
-              {availableWards.length === 0 ? <option>Loading wards...</option> : availableWards.map(w => (
-                <option key={w} value={w}>{w}</option>
-              ))}
-            </select>
-          </div>
-          <div className="card-body">
-            <div className="ward-label">{selectedWard || 'Ward'}</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {[wardRoomsRow1, wardRoomsRow2].map((row, rowIdx) => (
-                <div key={rowIdx} style={{ display: 'grid', gridTemplateColumns: `repeat(${row.length}, 1fr)`, gap: '10px' }}>
-                  {row.map((roomNum, i) => {
-                    const r = checkRobotInRoom(roomNum);
-                    const isEmpty = roomNum === null;
-                    return (
-                      <div
-                        key={roomNum ?? `empty-${rowIdx}-${i}`}
-                        className={`room ${r ? 'robot-here' : ''}`}
-                        style={isEmpty ? { opacity: 0.25, cursor: 'default', pointerEvents: 'none' } : { position: 'relative' }}
-                      >
-                        <span style={{ fontSize: '13px', fontWeight: 600 }}>{isEmpty ? '' : roomNum}</span>
-                        {/* Robot tooltip — only visible on hover via CSS :hover on parent */}
-                        {r && !isEmpty && (
-                          <div className="robot-pop" style={{
-                            position: 'absolute',
-                            bottom: 'calc(100% + 8px)',
-                            left: '50%',
-                            transform: 'translateX(-50%)',
-                            zIndex: 20,
-                            pointerEvents: 'none',
-                            opacity: 0,
-                            transition: 'opacity 0.15s',
-                          }} data-tooltip>
-                            <div className="rline1">
-                              <span className="rdot"></span>
-                              {r.name}
-                              <span style={{ ...statusStyle(r.status), padding: '1px 7px', borderRadius: '20px', fontSize: '10px', fontWeight: 700, marginLeft: 'auto' }}>{r.status}</span>
-                            </div>
-                            <div className="rline2">{r.currentLocation}</div>
-                            <div className="batt">
-                              <div className="batt-bar"><i style={{ width: `${r.batteryLevel}%`, background: batteryColor(r.batteryLevel) }}></i></div>
-                              <span style={{ color: batteryColor(r.batteryLevel) }}>Battery {r.batteryLevel}%</span>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              ))}
+      {/* RFID Scanner / Live Status Card */}
+      <Card className="mt-6 p-6">
+        <div className="flex items-center justify-between">
+          <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-ink">
+            <div className="h-2 w-2 rounded-full bg-teal-500 animate-pulseDot"></div>
+            RFID Scanner Terminal
+          </h3>
+          {mainRobot && <StatusPill status={mainRobot.status === 'Active' ? 'EN ROUTE' : mainRobot.status === 'Charging' ? 'CHARGING' : mainRobot.status.toUpperCase()} />}
+        </div>
+        
+        <div className="mt-6">
+          {!latestScanPayload ? (
+            // IDLE / RUNNING STATE
+            <div className="flex flex-col items-center gap-4 text-slate-650 py-6">
+              <div className="relative flex h-16 w-16 items-center justify-center">
+                <div className="absolute inset-0 rounded-full border-2 border-dashed border-teal-500/40 animate-spin" style={{ animationDuration: '8s' }}></div>
+                <div className="absolute inset-2 rounded-full bg-teal-500/10 animate-pulse"></div>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-teal-600 relative z-10"><path d="M4 4v16h16V4z"/><path d="M4 12h16"/><path d="M12 4v16"/></svg>
+              </div>
+              <div className="text-center">
+                <h4 className="text-teal-700 text-sm font-semibold tracking-wide mb-1">SYSTEM RUNNING</h4>
+                <p className="text-xs">Waiting for RFID scan from Amigo Robot...</p>
+              </div>
             </div>
-          </div>
-        </div>
+          ) : (
+            // SCANNED STATE
+            <div className="w-full animate-rise py-4">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-teal-50 text-teal-600 shadow-[0_0_15px_rgba(15,110,110,0.15)]">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+                <div>
+                  <h4 className="text-teal-700 text-sm font-bold uppercase tracking-wide">Scan Successful</h4>
+                  <div className="text-xs text-slate-650 mt-1">
+                    Robot: Amigo {latestScanPayload.robotId} • {latestScanPayload.time.toLocaleTimeString()}
+                  </div>
+                </div>
+              </div>
 
-        <div className="card">
-          <div className="card-head"><h3>Live Robot Fleet (From DB)</h3></div>
-          <table>
-            <thead><tr><th>Robot Name</th><th>Location</th><th>Battery</th><th>Status</th></tr></thead>
-            <tbody>
-              {loading ? (
-                <tr><td colSpan={4}>Loading from Postgres...</td></tr>
-              ) : robots.length === 0 ? (
-                <tr><td colSpan={4} style={{ color: 'var(--ink-soft)', textAlign: 'center', padding: '20px' }}>No robots registered.</td></tr>
-              ) : robots.map(robot => (
-                <tr key={robot.id}>
-                  <td><span style={{ fontWeight: 600, color: 'var(--ink)' }}>{robot.name}</span></td>
-                  <td>
-                    <div style={{ fontWeight: 500 }}>{robot.currentLocation || '—'}</div>
-                    <span className="cell-sub">{robot.ward?.name}</span>
-                  </td>
-                  <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <div className="batt-bar" style={{ width: '48px' }}>
-                        <i style={{ width: `${robot.batteryLevel}%`, background: batteryColor(robot.batteryLevel) }}></i>
+              <div className="rounded-xl border border-teal-900/10 bg-mist p-5">
+                {scannedPatient ? (
+                  <>
+                    <h2 className="text-2xl font-bold text-ink mb-4 tracking-tight">
+                      {scannedPatient.firstName} {scannedPatient.lastName}
+                    </h2>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="rounded-lg bg-white p-3 border border-teal-900/5">
+                        <div className="text-[10px] font-semibold uppercase text-slate-650/60 mb-1">Location</div>
+                        <div className="text-sm font-medium text-ink">
+                          {scannedPatient.ward?.name || "Unassigned"} — Room {scannedPatient.roomNumber || "N/A"}
+                        </div>
                       </div>
-                      <span style={{ fontSize: '13px', fontWeight: 600, color: batteryColor(robot.batteryLevel) }}>{robot.batteryLevel}%</span>
+                      <div className="rounded-lg bg-white p-3 border border-teal-900/5">
+                        <div className="text-[10px] font-semibold uppercase text-slate-650/60 mb-1">Condition</div>
+                        <div className="text-sm font-semibold text-amber-500">
+                          {scannedPatient.condition || "Stable"}
+                        </div>
+                      </div>
                     </div>
-                  </td>
-                  <td>
-                    <span style={{ ...statusStyle(robot.status), padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700 }}>
-                      {robot.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  </>
+                ) : (
+                  <div className="text-center py-6 text-slate-650">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mx-auto mb-3 text-coral-500"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+                    <p className="text-lg font-semibold text-ink mb-1">Unregistered Tag</p>
+                    <p className="text-sm font-mono text-teal-600">UID: {latestScanPayload.tag}</p>
+                    <p className="text-xs mt-2">This tag is not assigned to any active patient.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
-      </div>
+      </Card>
 
-      <div className="grid-2b">
-        <div className="card">
-          <div className="card-head"><h3>Upcoming Schedule (From DB)</h3><a className="view-all" onClick={() => router.push('/dashboard/deliveries')}>View all</a></div>
-          <table>
-            <thead><tr><th>Patient</th><th>Room</th><th>Medication</th><th>Time</th><th>Status</th></tr></thead>
-            <tbody>
-              {loading ? (
-                <tr><td colSpan={5}>Loading from Postgres...</td></tr>
-              ) : deliveries.map(delivery => {
-                const date = new Date(delivery.scheduledTime);
-                return (
-                  <tr key={delivery.id}>
-                    <td>{delivery.patient?.firstName} {delivery.patient?.lastName}</td>
-                    <td>{delivery.patient?.roomNumber}</td>
-                    <td>{delivery.medicine?.name}</td>
-                    <td>{date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
-                    <td><span className="cell-sub">{delivery.status}</span></td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-        <div className="card">
-          <div className="card-head"><h3>Active Patients (From DB)</h3><a className="view-all" onClick={() => router.push('/dashboard/patients')}>View all</a></div>
-          <table>
-            <thead><tr><th>Patient Name</th><th>Ward</th><th>Condition</th><th>Assigned Amigo</th></tr></thead>
-            <tbody>
-              {loading ? (
-                <tr><td colSpan={4}>Loading from Postgres...</td></tr>
-              ) : patients.map(patient => (
-                <tr key={patient.id}>
-                  <td>{patient.firstName} {patient.lastName}</td>
-                  <td>{patient.ward?.name}</td>
-                  <td>{patient.condition}</td>
-                  <td>{patient.assignedRobot?.name || '-'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      <div className="mt-6 grid grid-cols-2 gap-6">
+        {/* Quick dispatch / Pending Deliveries */}
+        <Card className="p-6">
+          <p className="mb-4 text-xs font-medium uppercase tracking-wide text-slate-650/70">
+            Scheduled doses
+          </p>
+          <div className="space-y-3">
+            {pendingDeliveries.length === 0 && (
+              <p className="text-sm text-slate-650">No pending deliveries.</p>
+            )}
+            {pendingDeliveries.slice(0, 5).map((d) => {
+              const date = new Date(d.scheduledTime);
+              return (
+                <div key={d.id} className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-ink">
+                      {d.patient?.firstName} {d.patient?.lastName} · {d.medicine?.name}
+                    </p>
+                    <p className="text-xs text-slate-650">
+                      {date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · Room {d.patient?.roomNumber}
+                    </p>
+                  </div>
+                  <Button size="sm" variant="secondary" disabled={true}>
+                    {d.status}
+                  </Button>
+                </div>
+              );
+            })}
+          </div>
+          <Link
+            href="/dashboard/deliveries"
+            className="mt-4 inline-block text-xs font-medium text-teal-600 hover:underline"
+          >
+            Manage schedules →
+          </Link>
+        </Card>
+
+        {/* Notifications / Alerts */}
+        <Card className="p-6">
+          <div className="mb-4 flex items-center justify-between">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-650/70">
+              Recent activity
+            </p>
+            <Link href="/dashboard/alerts" className="text-xs font-medium text-teal-600 hover:underline">
+              View all
+            </Link>
+          </div>
+          <div className="space-y-3">
+            {alerts.length === 0 && (
+              <p className="text-sm text-slate-650">Nothing yet today.</p>
+            )}
+            {alerts.slice(0, 6).map((n) => (
+              <div key={n.id} className="flex gap-2.5 text-sm">
+                <span className="mt-1.5 h-1.5 w-1.5 flex-none rounded-full bg-coral-500" />
+                <div>
+                  <span className="font-semibold text-ink text-xs">{n.type.replace(/_/g, " ")}: </span>
+                  <span className="text-slate-650">{n.message}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
       </div>
-    </>
+    </div>
   );
 }
