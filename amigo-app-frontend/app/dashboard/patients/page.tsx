@@ -59,19 +59,13 @@ function PatientsPageInner() {
     } catch (err) { console.error(err); }
     setSubmitting(false);
   }
-  
-  function openAdd() {
-    setEditPatient(null);
-    setForm({ firstName: "", lastName: "", wardId: null, roomNumber: "", condition: "", nfcTag: "", assignedRobotId: null, status: "Admitted" });
-    setShowModal(true);
-  }
 
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="font-display text-2xl font-semibold text-ink">Patients Details</h1>
-          <p className="text-sm text-slate-650">Register patients, manage conditions, and assign NFC tags.</p>
+          <h1 className="font-display text-2xl font-semibold text-ink dark:text-slate-100">Patients Details</h1>
+          <p className="text-sm text-slate-650 dark:text-slate-400">Register patients, manage conditions, and assign NFC tags.</p>
         </div>
         <Button onClick={() => setShowModal(!showModal)}>
           {showModal ? "Close" : "Add Patient"}
@@ -118,26 +112,26 @@ function PatientsPageInner() {
         </Card>
       )}
 
-      <Card className="divide-y divide-teal-900/5">
+      <Card className="divide-y divide-teal-900/5 dark:divide-slate-800/80">
         {patients.length === 0 && (
-          <p className="p-6 text-sm text-slate-650">{loading ? "Loading patients..." : "No patients found."}</p>
+          <p className="p-6 text-sm text-slate-650 dark:text-slate-400">{loading ? "Loading patients..." : "No patients found."}</p>
         )}
         {patients.map((p) => (
-          <div key={p.id} className="flex items-center justify-between px-6 py-4 transition hover:bg-mist">
+          <div key={p.id} className="flex items-center justify-between px-6 py-4 transition hover:bg-mist dark:hover:bg-slate-800/50">
             <div>
-              <p className="font-medium text-ink">{p.firstName} {p.lastName}</p>
-              <p className="text-xs text-slate-650">
-                Condition: {p.condition || "N/A"} · Tag: <span className="font-mono text-teal-600">{p.nfcTag || "None"}</span>
+              <p className="font-medium text-ink dark:text-slate-100">{p.firstName} {p.lastName}</p>
+              <p className="text-xs text-slate-650 dark:text-slate-400">
+                Condition: {p.condition || "N/A"} · Tag: <span className="font-mono text-teal-600 dark:text-teal-400">{p.nfcTag || "None"}</span>
               </p>
             </div>
             <div className="text-right flex items-center gap-6">
               <div className="text-right">
                 {p.roomNumber ? (
-                  <p className="text-sm font-medium text-teal-600">Room {p.roomNumber}</p>
+                  <p className="text-sm font-medium text-teal-600 dark:text-teal-400">Room {p.roomNumber}</p>
                 ) : (
                   <p className="text-sm text-coral-500">No room assigned</p>
                 )}
-                <p className="text-xs text-slate-650/70">{p.ward?.name ?? "No Ward"}</p>
+                <p className="text-xs text-slate-650/70 dark:text-slate-400">{p.ward?.name ?? "No Ward"}</p>
               </div>
               
               <div className="flex gap-2">

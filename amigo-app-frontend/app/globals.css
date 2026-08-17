@@ -17,14 +17,27 @@
   color: #f4f7f8;
 }
 
+.dark ::selection {
+  background-color: #3e9c90;
+  color: #0b1317;
+}
+
 :focus-visible {
   outline: 2px solid #0f6e6e;
   outline-offset: 2px;
   border-radius: 4px;
 }
 
-@media (prefers-reduced-motion: reduce) {
+.dark :focus-visible {
+  outline-color: #3e9c90;
+}
 
+/* Smooth transition for theme switches */
+body {
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
@@ -76,4 +89,23 @@
   border-radius: 9999px;
   background: currentColor;
   animation: pulseDot 1.8s ease-in-out infinite;
+}
+
+/* Custom scrollbars for dark mode */
+.dark ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #0b1317;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #1e2d35;
+  border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #2a3e49;
 }

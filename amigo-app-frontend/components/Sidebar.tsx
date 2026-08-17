@@ -34,7 +34,7 @@ export default function Sidebar() {
   const { logOut } = useAuth();
 
   return (
-    <aside className="sidebar">
+    <aside className="sidebar sticky top-0 h-screen overflow-y-auto">
       <div className="logo-row" style={{ justifyContent: "space-between", alignItems: "center" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <div className="logo-badge">

@@ -52,7 +52,6 @@ export default function DeliveriesPage() {
         const d = new Date();
         d.setHours(d.getHours() + 1);
         d.setMinutes(0);
-        // Format to local ISO datetime for the input
         setNewDelivery(prev => ({ ...prev, time: new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16) }));
       } catch (e) { console.error(e); }
     }
@@ -103,12 +102,12 @@ export default function DeliveriesPage() {
     <div>
       <div className="mb-6 flex items-start justify-between">
         <div className="flex items-start gap-3">
-          <div className="flex h-11 w-11 flex-none items-center justify-center rounded-xl bg-teal-50 text-teal-600">
+          <div className="flex h-11 w-11 flex-none items-center justify-center rounded-xl bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400">
             <IconClipboard className="h-5 w-5" />
           </div>
           <div>
-            <h1 className="font-display text-2xl font-semibold text-ink">Dispense Schedule</h1>
-            <p className="text-sm text-slate-650">Manage and track medication deliveries.</p>
+            <h1 className="font-display text-2xl font-semibold text-ink dark:text-slate-100">Dispense Schedule</h1>
+            <p className="text-sm text-slate-650 dark:text-slate-400">Manage and track medication deliveries.</p>
           </div>
         </div>
         <Button onClick={openModal}>
@@ -119,52 +118,54 @@ export default function DeliveriesPage() {
       <div className="grid grid-cols-4 gap-4">
         <Card className="p-5 cursor-pointer hover:-translate-y-0.5 transition" onClick={() => setTab("Pending")}>
           <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-slate-650">Pending</p>
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-amber-50 text-amber-500">
+            <p className="text-sm font-medium text-slate-650 dark:text-slate-400">Pending</p>
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-amber-50 dark:bg-amber-950/60 text-amber-500 dark:text-amber-300">
               <IconClock className="h-4 w-4" />
             </span>
           </div>
-          <p className="mt-3 font-display text-3xl font-semibold text-ink">{pendingCount}</p>
+          <p className="mt-3 font-display text-3xl font-semibold text-ink dark:text-slate-100">{pendingCount}</p>
         </Card>
         <Card className="p-5 cursor-pointer hover:-translate-y-0.5 transition" onClick={() => setTab("In Progress")}>
           <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-slate-650">In Progress</p>
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-teal-50 text-teal-600">
+            <p className="text-sm font-medium text-slate-650 dark:text-slate-400">In Progress</p>
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-300">
               <IconPulse className="h-4 w-4" />
             </span>
           </div>
-          <p className="mt-3 font-display text-3xl font-semibold text-ink">{inProgressCount}</p>
+          <p className="mt-3 font-display text-3xl font-semibold text-ink dark:text-slate-100">{inProgressCount}</p>
         </Card>
         <Card className="p-5 cursor-pointer hover:-translate-y-0.5 transition" onClick={() => setTab("Completed")}>
           <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-slate-650">Completed</p>
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-sage-400/15 text-sage-500">
+            <p className="text-sm font-medium text-slate-650 dark:text-slate-400">Completed</p>
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-sage-400/15 dark:bg-emerald-950/60 text-sage-500 dark:text-emerald-300">
               <IconCheckCircle className="h-4 w-4" />
             </span>
           </div>
-          <p className="mt-3 font-display text-3xl font-semibold text-ink">{completedCount}</p>
+          <p className="mt-3 font-display text-3xl font-semibold text-ink dark:text-slate-100">{completedCount}</p>
         </Card>
         <Card className="p-5 cursor-pointer hover:-translate-y-0.5 transition" onClick={() => setTab("Failed")}>
           <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-slate-650">Failed / Missed</p>
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-coral-400/15 text-coral-500">
+            <p className="text-sm font-medium text-slate-650 dark:text-slate-400">Failed / Missed</p>
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-coral-400/15 dark:bg-rose-950/60 text-coral-500 dark:text-rose-300">
               <IconXCircle className="h-4 w-4" />
             </span>
           </div>
-          <p className="mt-3 font-display text-3xl font-semibold text-ink">{failedCount}</p>
+          <p className="mt-3 font-display text-3xl font-semibold text-ink dark:text-slate-100">{failedCount}</p>
         </Card>
       </div>
 
       <Card className="mt-6 overflow-hidden">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-teal-900/5 px-6 py-4">
-          <p className="font-display text-lg font-semibold text-ink">Delivery Queue</p>
-          <div className="flex items-center gap-1 rounded-full bg-mist p-1">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-teal-900/5 dark:border-slate-800/80 px-6 py-4">
+          <p className="font-display text-lg font-semibold text-ink dark:text-slate-100">Delivery Queue</p>
+          <div className="flex items-center gap-1 rounded-full bg-mist dark:bg-slate-900/80 p-1">
             {tabs.map((t) => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
                 className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition ${
-                  tab === t ? "bg-white text-teal-700 shadow-card" : "text-slate-650"
+                  tab === t
+                    ? "bg-white dark:bg-slate-800 text-teal-700 dark:text-teal-300 shadow-card dark:shadow-none"
+                    : "text-slate-650 dark:text-slate-400 hover:text-ink dark:hover:text-slate-200"
                 }`}
               >
                 {t}
@@ -176,7 +177,7 @@ export default function DeliveriesPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead>
-              <tr className="text-xs uppercase tracking-wide text-slate-650/60">
+              <tr className="text-xs uppercase tracking-wide text-slate-650/60 dark:text-slate-400 border-b border-teal-900/5 dark:border-slate-800/80">
                 <th className="px-6 py-3 font-medium">Patient</th>
                 <th className="px-3 py-3 font-medium">Room</th>
                 <th className="px-3 py-3 font-medium">Medicine</th>
@@ -186,34 +187,34 @@ export default function DeliveriesPage() {
                 <th className="px-6 py-3 font-medium">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-teal-900/5">
+            <tbody className="divide-y divide-teal-900/5 dark:divide-slate-800/60">
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-6 py-8 text-center text-slate-650">
+                  <td colSpan={7} className="px-6 py-8 text-center text-slate-650 dark:text-slate-400">
                     No deliveries in this view.
                   </td>
                 </tr>
               )}
               {filtered.map((d) => (
-                <tr key={d.id}>
-                  <td className="px-6 py-4 font-medium text-ink">
+                <tr key={d.id} className="hover:bg-mist/50 dark:hover:bg-slate-800/30 transition">
+                  <td className="px-6 py-4 font-medium text-ink dark:text-slate-100">
                     {d.patient ? `${d.patient.firstName} ${d.patient.lastName}` : "—"}
                   </td>
-                  <td className="px-3 py-4 text-slate-650">{d.patient?.roomNumber ?? "—"}</td>
+                  <td className="px-3 py-4 text-slate-650 dark:text-slate-300">{d.patient?.roomNumber ?? "—"}</td>
                   <td className="px-3 py-4">
                     {d.medicine?.name ? (
-                      <span className="rounded-md bg-teal-50 px-2 py-1 text-xs font-medium text-teal-700">
+                      <span className="rounded-md bg-teal-50 dark:bg-teal-950/60 px-2 py-1 text-xs font-medium text-teal-700 dark:text-teal-300 border border-teal-200/30 dark:border-teal-800/40">
                         {d.medicine.name}
                       </span>
                     ) : (
-                      <span className="text-slate-650/60">—</span>
+                      <span className="text-slate-650/60 dark:text-slate-500">—</span>
                     )}
                   </td>
-                  <td className="px-3 py-4 text-slate-650">{d.assignedRobot?.name || "—"}</td>
+                  <td className="px-3 py-4 text-slate-650 dark:text-slate-300">{d.assignedRobot?.name || "—"}</td>
                   <td className="px-3 py-4">
                     <StatusPill status={d.status} />
                   </td>
-                  <td className="px-3 py-4 whitespace-nowrap text-slate-650">
+                  <td className="px-3 py-4 whitespace-nowrap text-slate-650 dark:text-slate-300">
                     {new Date(d.scheduledTime).toLocaleString(undefined, {
                       month: "short",
                       day: "numeric",
@@ -227,7 +228,7 @@ export default function DeliveriesPage() {
                         <button
                           disabled={busyId === d.id}
                           onClick={() => markStatus(d.id, "Completed")}
-                          className="text-xs font-medium text-teal-600 hover:underline disabled:opacity-50"
+                          className="text-xs font-medium text-teal-600 dark:text-teal-400 hover:underline disabled:opacity-50"
                         >
                           Complete
                         </button>
@@ -240,7 +241,7 @@ export default function DeliveriesPage() {
                         </button>
                       </div>
                     ) : (
-                      <span className="text-xs italic text-slate-650/50">No actions available</span>
+                      <span className="text-xs italic text-slate-650/50 dark:text-slate-500">No actions available</span>
                     )}
                   </td>
                 </tr>
@@ -252,9 +253,9 @@ export default function DeliveriesPage() {
 
       {/* Schedule Dispense Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/50 dark:bg-black/70 backdrop-blur-sm">
           <Card className="w-full max-w-md p-6 relative">
-            <h2 className="text-xl font-bold text-ink mb-6">Schedule Dispense</h2>
+            <h2 className="text-xl font-bold text-ink dark:text-slate-100 mb-6">Schedule Dispense</h2>
             <form onSubmit={handleCreate} className="space-y-4">
               <Field label="Patient">
                 <select required value={newDelivery.patientId} onChange={e => setNewDelivery({...newDelivery, patientId: e.target.value})} className={inputClass}>

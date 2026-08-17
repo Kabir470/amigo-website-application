@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Brand } from "@/components/Logo";
 import { Button, Field, inputClass } from "@/components/ui";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 function LoginForm() {
   const router = useRouter();
@@ -59,10 +60,10 @@ function LoginForm() {
         <Brand />
       </Link>
 
-      <h1 className="font-display text-2xl font-semibold text-ink">
+      <h1 className="font-display text-2xl font-semibold text-ink dark:text-slate-100">
         {isSignUp ? "Create Account" : "Staff sign in"}
       </h1>
-      <p className="mt-1.5 text-sm text-slate-650">
+      <p className="mt-1.5 text-sm text-slate-650 dark:text-slate-400">
         {isSignUp
           ? "Sign up for the Amigo admin panel."
           : "Manage patients, schedules, and Amigo's deliveries."}
@@ -93,13 +94,13 @@ function LoginForm() {
         </Field>
 
         {error && (
-          <p className="rounded-lg bg-coral-400/10 px-3.5 py-2.5 text-sm text-coral-500">
+          <p className="rounded-lg bg-coral-400/10 dark:bg-rose-950/60 px-3.5 py-2.5 text-sm text-coral-500 dark:text-rose-300">
             {error}
           </p>
         )}
 
         {successMsg && (
-          <p className="rounded-lg bg-teal-400/10 px-3.5 py-2.5 text-sm text-teal-600">
+          <p className="rounded-lg bg-teal-400/10 dark:bg-teal-950/60 px-3.5 py-2.5 text-sm text-teal-600 dark:text-teal-300">
             {successMsg}
           </p>
         )}
@@ -109,13 +110,13 @@ function LoginForm() {
         </Button>
       </form>
 
-      <div className="mt-6 text-center text-sm text-slate-650">
+      <div className="mt-6 text-center text-sm text-slate-650 dark:text-slate-400">
         {isSignUp ? (
           <>
             Already have an account?{" "}
             <button
               onClick={() => { setIsSignUp(false); setError(null); setSuccessMsg(""); }}
-              className="font-medium text-teal-600 hover:underline"
+              className="font-medium text-teal-600 dark:text-teal-400 hover:underline"
             >
               Sign in
             </button>
@@ -125,22 +126,23 @@ function LoginForm() {
             Don't have an account?{" "}
             <button
               onClick={() => { setIsSignUp(true); setError(null); setSuccessMsg(""); }}
-              className="font-medium text-teal-600 hover:underline"
+              className="font-medium text-teal-600 dark:text-teal-400 hover:underline"
             >
               Sign up
             </button>
           </>
         )}
       </div>
-
-
     </div>
   );
 }
 
 export default function LoginPage() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-mist px-6 py-12">
+    <main className="relative flex min-h-screen items-center justify-center bg-mist dark:bg-[#0B1317] px-6 py-12 transition-colors">
+      <div className="absolute top-6 right-6">
+        <ThemeToggle />
+      </div>
       <Suspense>
         <LoginForm />
       </Suspense>

@@ -119,8 +119,8 @@ export default function DashboardPage() {
     <div>
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="font-display text-2xl font-semibold text-ink">Ward overview</h1>
-          <p className="text-sm text-slate-650">
+          <h1 className="font-display text-2xl font-semibold text-ink dark:text-slate-100">Ward overview</h1>
+          <p className="text-sm text-slate-650 dark:text-slate-400">
             {new Date().toLocaleDateString(undefined, {
               weekday: "long",
               month: "long",
@@ -133,23 +133,23 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-3 gap-4">
         <Card className="p-5">
-          <p className="text-xs font-medium text-slate-650">Active patients</p>
-          <p className="mt-1.5 font-display text-3xl font-semibold text-ink">{loading ? "..." : patients.length}</p>
+          <p className="text-xs font-medium text-slate-650 dark:text-slate-400">Active patients</p>
+          <p className="mt-1.5 font-display text-3xl font-semibold text-ink dark:text-slate-100">{loading ? "..." : patients.length}</p>
         </Card>
         <Card className="p-5">
-          <p className="text-xs font-medium text-slate-650">Delivered today</p>
-          <p className="mt-1.5 font-display text-3xl font-semibold text-ink">{loading ? "..." : completedDeliveries}</p>
+          <p className="text-xs font-medium text-slate-650 dark:text-slate-400">Delivered today</p>
+          <p className="mt-1.5 font-display text-3xl font-semibold text-ink dark:text-slate-100">{loading ? "..." : completedDeliveries}</p>
         </Card>
         <Card className="p-5">
-          <p className="text-xs font-medium text-slate-650">Unread alerts</p>
-          <p className="mt-1.5 font-display text-3xl font-semibold text-ink">{loading ? "..." : alerts.length}</p>
+          <p className="text-xs font-medium text-slate-650 dark:text-slate-400">Unread alerts</p>
+          <p className="mt-1.5 font-display text-3xl font-semibold text-ink dark:text-slate-100">{loading ? "..." : alerts.length}</p>
         </Card>
       </div>
 
       {/* RFID Scanner / Live Status Card */}
       <Card className="mt-6 p-6">
         <div className="flex items-center justify-between">
-          <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-ink">
+          <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-ink dark:text-slate-200">
             <div className="h-2 w-2 rounded-full bg-teal-500 animate-pulseDot"></div>
             RFID Scanner Terminal
           </h3>
@@ -159,14 +159,14 @@ export default function DashboardPage() {
         <div className="mt-6">
           {!latestScanPayload ? (
             // IDLE / RUNNING STATE
-            <div className="flex flex-col items-center gap-4 text-slate-650 py-6">
+            <div className="flex flex-col items-center gap-4 text-slate-650 dark:text-slate-400 py-6">
               <div className="relative flex h-16 w-16 items-center justify-center">
                 <div className="absolute inset-0 rounded-full border-2 border-dashed border-teal-500/40 animate-spin" style={{ animationDuration: '8s' }}></div>
                 <div className="absolute inset-2 rounded-full bg-teal-500/10 animate-pulse"></div>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-teal-600 relative z-10"><path d="M4 4v16h16V4z"/><path d="M4 12h16"/><path d="M12 4v16"/></svg>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-teal-600 dark:text-teal-400 relative z-10"><path d="M4 4v16h16V4z"/><path d="M4 12h16"/><path d="M12 4v16"/></svg>
               </div>
               <div className="text-center">
-                <h4 className="text-teal-700 text-sm font-semibold tracking-wide mb-1">SYSTEM RUNNING</h4>
+                <h4 className="text-teal-700 dark:text-teal-300 text-sm font-semibold tracking-wide mb-1">SYSTEM RUNNING</h4>
                 <p className="text-xs">Waiting for RFID scan from Amigo Robot...</p>
               </div>
             </div>
@@ -174,43 +174,43 @@ export default function DashboardPage() {
             // SCANNED STATE
             <div className="w-full animate-rise py-4">
               <div className="flex items-center gap-4 mb-6">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-teal-50 text-teal-600 shadow-[0_0_15px_rgba(15,110,110,0.15)]">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-300 shadow-[0_0_15px_rgba(15,110,110,0.15)]">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                 </div>
                 <div>
-                  <h4 className="text-teal-700 text-sm font-bold uppercase tracking-wide">Scan Successful</h4>
-                  <div className="text-xs text-slate-650 mt-1">
+                  <h4 className="text-teal-700 dark:text-teal-300 text-sm font-bold uppercase tracking-wide">Scan Successful</h4>
+                  <div className="text-xs text-slate-650 dark:text-slate-400 mt-1">
                     Robot: Amigo {latestScanPayload.robotId} • {latestScanPayload.time.toLocaleTimeString()}
                   </div>
                 </div>
               </div>
 
-              <div className="rounded-xl border border-teal-900/10 bg-mist p-5">
+              <div className="rounded-xl border border-teal-900/10 dark:border-slate-800 bg-mist dark:bg-slate-900/60 p-5">
                 {scannedPatient ? (
                   <>
-                    <h2 className="text-2xl font-bold text-ink mb-4 tracking-tight">
+                    <h2 className="text-2xl font-bold text-ink dark:text-slate-100 mb-4 tracking-tight">
                       {scannedPatient.firstName} {scannedPatient.lastName}
                     </h2>
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="rounded-lg bg-white p-3 border border-teal-900/5">
-                        <div className="text-[10px] font-semibold uppercase text-slate-650/60 mb-1">Location</div>
-                        <div className="text-sm font-medium text-ink">
+                      <div className="rounded-lg bg-white dark:bg-slate-900 p-3 border border-teal-900/5 dark:border-slate-800/80">
+                        <div className="text-[10px] font-semibold uppercase text-slate-650/60 dark:text-slate-400 mb-1">Location</div>
+                        <div className="text-sm font-medium text-ink dark:text-slate-200">
                           {scannedPatient.ward?.name || "Unassigned"} — Room {scannedPatient.roomNumber || "N/A"}
                         </div>
                       </div>
-                      <div className="rounded-lg bg-white p-3 border border-teal-900/5">
-                        <div className="text-[10px] font-semibold uppercase text-slate-650/60 mb-1">Condition</div>
-                        <div className="text-sm font-semibold text-amber-500">
+                      <div className="rounded-lg bg-white dark:bg-slate-900 p-3 border border-teal-900/5 dark:border-slate-800/80">
+                        <div className="text-[10px] font-semibold uppercase text-slate-650/60 dark:text-slate-400 mb-1">Condition</div>
+                        <div className="text-sm font-semibold text-amber-500 dark:text-amber-400">
                           {scannedPatient.condition || "Stable"}
                         </div>
                       </div>
                     </div>
                   </>
                 ) : (
-                  <div className="text-center py-6 text-slate-650">
+                  <div className="text-center py-6 text-slate-650 dark:text-slate-400">
                     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mx-auto mb-3 text-coral-500"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
-                    <p className="text-lg font-semibold text-ink mb-1">Unregistered Tag</p>
-                    <p className="text-sm font-mono text-teal-600">UID: {latestScanPayload.tag}</p>
+                    <p className="text-lg font-semibold text-ink dark:text-slate-100 mb-1">Unregistered Tag</p>
+                    <p className="text-sm font-mono text-teal-600 dark:text-teal-400">UID: {latestScanPayload.tag}</p>
                     <p className="text-xs mt-2">This tag is not assigned to any active patient.</p>
                   </div>
                 )}
@@ -223,22 +223,22 @@ export default function DashboardPage() {
       <div className="mt-6 grid grid-cols-2 gap-6">
         {/* Quick dispatch / Pending Deliveries */}
         <Card className="p-6">
-          <p className="mb-4 text-xs font-medium uppercase tracking-wide text-slate-650/70">
+          <p className="mb-4 text-xs font-medium uppercase tracking-wide text-slate-650/70 dark:text-slate-400">
             Scheduled doses
           </p>
           <div className="space-y-3">
             {pendingDeliveries.length === 0 && (
-              <p className="text-sm text-slate-650">No pending deliveries.</p>
+              <p className="text-sm text-slate-650 dark:text-slate-400">No pending deliveries.</p>
             )}
             {pendingDeliveries.slice(0, 5).map((d) => {
               const date = new Date(d.scheduledTime);
               return (
                 <div key={d.id} className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-ink">
+                    <p className="truncate text-sm font-medium text-ink dark:text-slate-200">
                       {d.patient?.firstName} {d.patient?.lastName} · {d.medicine?.name}
                     </p>
-                    <p className="text-xs text-slate-650">
+                    <p className="text-xs text-slate-650 dark:text-slate-400">
                       {date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · Room {d.patient?.roomNumber}
                     </p>
                   </div>
@@ -251,7 +251,7 @@ export default function DashboardPage() {
           </div>
           <Link
             href="/dashboard/deliveries"
-            className="mt-4 inline-block text-xs font-medium text-teal-600 hover:underline"
+            className="mt-4 inline-block text-xs font-medium text-teal-600 dark:text-teal-400 hover:underline"
           >
             Manage schedules →
           </Link>
@@ -260,23 +260,23 @@ export default function DashboardPage() {
         {/* Notifications / Alerts */}
         <Card className="p-6">
           <div className="mb-4 flex items-center justify-between">
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-650/70">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-650/70 dark:text-slate-400">
               Recent activity
             </p>
-            <Link href="/dashboard/alerts" className="text-xs font-medium text-teal-600 hover:underline">
+            <Link href="/dashboard/alerts" className="text-xs font-medium text-teal-600 dark:text-teal-400 hover:underline">
               View all
             </Link>
           </div>
           <div className="space-y-3">
             {alerts.length === 0 && (
-              <p className="text-sm text-slate-650">Nothing yet today.</p>
+              <p className="text-sm text-slate-650 dark:text-slate-400">Nothing yet today.</p>
             )}
             {alerts.slice(0, 6).map((n) => (
               <div key={n.id} className="flex gap-2.5 text-sm">
                 <span className="mt-1.5 h-1.5 w-1.5 flex-none rounded-full bg-coral-500" />
                 <div>
-                  <span className="font-semibold text-ink text-xs">{n.type.replace(/_/g, " ")}: </span>
-                  <span className="text-slate-650">{n.message}</span>
+                  <span className="font-semibold text-ink dark:text-slate-200 text-xs">{n.type.replace(/_/g, " ")}: </span>
+                  <span className="text-slate-650 dark:text-slate-400">{n.message}</span>
                 </div>
               </div>
             ))}

@@ -22,13 +22,17 @@ export default function DashboardLayout({
   }, [authLoading, session, router]);
 
   if (authLoading || !session) {
-    return <div className="min-h-screen bg-mist flex items-center justify-center text-slate-650">Loading...</div>;
+    return (
+      <div className="min-h-screen bg-mist dark:bg-[#0B1317] flex items-center justify-center text-slate-650 dark:text-slate-300">
+        Loading...
+      </div>
+    );
   }
 
   const name = user?.email?.split("@")[0] || "Staff";
 
   return (
-    <div className="flex min-h-screen bg-mist">
+    <div className="flex min-h-screen bg-mist dark:bg-[#0B1317] transition-colors duration-200">
       <StaffNav />
       <div className="flex-1 overflow-x-hidden">
         <StaffTopbar name={name} />

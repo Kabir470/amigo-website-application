@@ -95,39 +95,39 @@ export default function RobotPage() {
     setSelected(robots.find((x) => x.id === r.id) ?? r);
   }
 
-  if (loading) return <div className="p-6 text-slate-400">Loading robots from database...</div>;
+  if (loading) return <div className="p-6 text-slate-400 dark:text-slate-500">Loading robots from database...</div>;
 
   return (
     <div>
       <div className="mb-6 flex items-start gap-3">
-        <div className="flex h-11 w-11 flex-none items-center justify-center rounded-xl bg-teal-50 text-teal-600">
+        <div className="flex h-11 w-11 flex-none items-center justify-center rounded-xl bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400">
           <IconRobot className="h-5 w-5" />
         </div>
         <div>
-          <h1 className="font-display text-2xl font-semibold text-ink">Robot Monitor & Control</h1>
-          <p className="text-sm text-slate-650">Live diagnostics, configuration, and manual overrides for the fleet.</p>
+          <h1 className="font-display text-2xl font-semibold text-ink dark:text-slate-100">Robot Monitor & Control</h1>
+          <p className="text-sm text-slate-650 dark:text-slate-400">Live diagnostics, configuration, and manual overrides for the fleet.</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Robot list */}
         <div className="space-y-3">
-          <p className="text-xs font-semibold uppercase tracking-wider mb-2 text-slate-650">Fleet</p>
+          <p className="text-xs font-semibold uppercase tracking-wider mb-2 text-slate-650 dark:text-slate-400">Fleet</p>
           {robots.map((r) => (
             <button
               key={r.id}
               onClick={() => selectRobot(r)}
               className="w-full text-left transition-all hover:scale-[1.01]"
             >
-              <Card className="p-4" style={selected?.id === r.id ? { border: "2px solid var(--teal-500)" } : {}}>
+              <Card className="p-4" style={selected?.id === r.id ? { border: "2px solid #0F6E6E" } : {}}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-teal-50">
-                      <IconRobot className="w-5 h-5 text-teal-600" />
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-teal-50 dark:bg-teal-950/60">
+                      <IconRobot className="w-5 h-5 text-teal-600 dark:text-teal-400" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-ink">{r.name}</p>
-                      <p className="text-xs text-slate-650/70">{r.ward?.name || "Unassigned"}</p>
+                      <p className="text-sm font-medium text-ink dark:text-slate-100">{r.name}</p>
+                      <p className="text-xs text-slate-650/70 dark:text-slate-400">{r.ward?.name || "Unassigned"}</p>
                     </div>
                   </div>
                   <StatusPill status={r.status} />
@@ -146,7 +146,7 @@ export default function RobotPage() {
           <div className="lg:col-span-2 space-y-4">
             <Card className="p-5">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="font-semibold text-ink text-lg">{selected.name}</h2>
+                <h2 className="font-semibold text-ink dark:text-slate-100 text-lg">{selected.name}</h2>
                 <div className="flex items-center gap-2">
                   {selected.status === "Active" ? (
                     <Wifi className="w-4 h-4 text-emerald-500" />
@@ -166,12 +166,12 @@ export default function RobotPage() {
                   { label: "Max Speed", value: selected.maxSpeed ? `${selected.maxSpeed} m/s` : "—", icon: Route, color: "#f59e0b" },
                   { label: "Ward", value: selected.ward?.name || "—", icon: AlertTriangle, color: "#94a3b8" },
                 ].map((s) => (
-                  <div key={s.label} className="rounded-xl p-3 bg-mist border border-teal-900/5">
+                  <div key={s.label} className="rounded-xl p-3 bg-mist dark:bg-slate-900/60 border border-teal-900/5 dark:border-slate-800/80">
                     <div className="flex items-center gap-1.5 mb-1">
                       <s.icon className="w-3.5 h-3.5" style={{ color: s.color }} />
-                      <p className="text-xs text-slate-650">{s.label}</p>
+                      <p className="text-xs text-slate-650 dark:text-slate-400">{s.label}</p>
                     </div>
-                    <p className="text-sm font-semibold text-ink">{s.value}</p>
+                    <p className="text-sm font-semibold text-ink dark:text-slate-100">{s.value}</p>
                   </div>
                 ))}
               </div>
@@ -180,18 +180,18 @@ export default function RobotPage() {
             {/* Controls */}
             <Card className="p-5">
               <div className="flex items-center gap-2 mb-4">
-                <Cpu className="w-4 h-4 text-teal-600" />
-                <h3 className="font-medium text-ink">Manual Override Controls</h3>
-                <span className="text-xs ml-auto px-2 py-0.5 rounded-full bg-coral-500/10 text-coral-600 border border-coral-500/20">
+                <Cpu className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                <h3 className="font-medium text-ink dark:text-slate-100">Manual Override Controls</h3>
+                <span className="text-xs ml-auto px-2 py-0.5 rounded-full bg-coral-500/10 dark:bg-rose-950/60 text-coral-600 dark:text-rose-300 border border-coral-500/20">
                   Admin Only
                 </span>
               </div>
               <div className="flex flex-wrap gap-3">
                 {[
-                  { cmd: "resume" as const, label: "Resume", icon: Play, color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-200" },
-                  { cmd: "pause" as const, label: "Pause", icon: Pause, color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-200" },
-                  { cmd: "stop" as const, label: "Stop", icon: Square, color: "text-coral-600", bg: "bg-coral-50", border: "border-coral-200" },
-                  { cmd: "return-to-base" as const, label: "Return to Base", icon: Home, color: "text-teal-600", bg: "bg-teal-50", border: "border-teal-200" },
+                  { cmd: "resume" as const, label: "Resume", icon: Play, color: "text-emerald-600 dark:text-emerald-300", bg: "bg-emerald-50 dark:bg-emerald-950/50", border: "border-emerald-200 dark:border-emerald-800/50" },
+                  { cmd: "pause" as const, label: "Pause", icon: Pause, color: "text-amber-600 dark:text-amber-300", bg: "bg-amber-50 dark:bg-amber-950/50", border: "border-amber-200 dark:border-amber-800/50" },
+                  { cmd: "stop" as const, label: "Stop", icon: Square, color: "text-coral-600 dark:text-rose-300", bg: "bg-coral-50 dark:bg-rose-950/50", border: "border-coral-200 dark:border-rose-800/50" },
+                  { cmd: "return-to-base" as const, label: "Return to Base", icon: Home, color: "text-teal-600 dark:text-teal-300", bg: "bg-teal-50 dark:bg-teal-950/50", border: "border-teal-200 dark:border-teal-800/50" },
                 ].map(({ cmd, label, icon: Icon, color, bg, border }) => (
                   <button key={cmd} onClick={() => sendCommand(cmd)}
                     className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${bg} ${color} border ${border} hover:scale-[1.02]`}>
@@ -200,7 +200,7 @@ export default function RobotPage() {
                   </button>
                 ))}
               </div>
-              <p className="text-xs mt-3 text-slate-650/70">
+              <p className="text-xs mt-3 text-slate-650/70 dark:text-slate-400">
                 Commands are persisted to the database in real-time. Use this if a delivery gets stuck.
               </p>
             </Card>
@@ -227,17 +227,17 @@ function RobotConfigEditor({ robot, onSave }: { robot: ApiRobot; onSave: (sensit
 
   return (
     <Card className="p-5">
-      <h3 className="font-medium text-ink mb-4">Firmware & Line-Following Configuration</h3>
+      <h3 className="font-medium text-ink dark:text-slate-100 mb-4">Firmware & Line-Following Configuration</h3>
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div>
-          <label className="block text-xs font-medium mb-1.5 text-slate-650">
-            Sensor Sensitivity: <span className="text-teal-600 font-bold">{sensitivity}</span>
+          <label className="block text-xs font-medium mb-1.5 text-slate-650 dark:text-slate-300">
+            Sensor Sensitivity: <span className="text-teal-600 dark:text-teal-400 font-bold">{sensitivity}</span>
           </label>
           <input type="range" min={10} max={100} value={sensitivity} onChange={(e) => setSensitivity(Number(e.target.value))} className="w-full accent-teal-600" />
         </div>
         <div>
-          <label className="block text-xs font-medium mb-1.5 text-slate-650">
-            Max Speed (m/s): <span className="text-teal-600 font-bold">{maxSpeed}</span>
+          <label className="block text-xs font-medium mb-1.5 text-slate-650 dark:text-slate-300">
+            Max Speed (m/s): <span className="text-teal-600 dark:text-teal-400 font-bold">{maxSpeed}</span>
           </label>
           <input type="range" min={0.1} max={2} step={0.1} value={maxSpeed} onChange={(e) => setMaxSpeed(Number(e.target.value))} className="w-full accent-teal-600" />
         </div>
@@ -245,7 +245,7 @@ function RobotConfigEditor({ robot, onSave }: { robot: ApiRobot; onSave: (sensit
       <Button onClick={save}>
         {saved ? "✓ Config Applied to DB" : "Push Config to Robot"}
       </Button>
-      <p className="mt-3 text-xs text-slate-650/70">
+      <p className="mt-3 text-xs text-slate-650/70 dark:text-slate-400">
         Motor speed, PID line-following gains, and corridor map editing will live here once the
         hardware team wires up the config endpoint on the robot's onboard controller.
       </p>
