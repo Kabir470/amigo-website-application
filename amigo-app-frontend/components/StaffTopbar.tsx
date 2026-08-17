@@ -5,10 +5,16 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { IconSearch, IconBell } from "@/components/icons";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { useAuth } from "@/lib/auth/AuthContext";
 
-export function StaffTopbar({ name }: { name: string }) {
+export function StaffTopbar({ name: propName }: { name?: string }) {
   const [q, setQ] = useState("");
+  const [imgError, setImgError] = useState(false);
   const router = useRouter();
+  const { user } = useAuth();
+
+  const name = user?.user_metadata?.full_name || user?.user_metadata?.name || propName || user?.email?.split("@")[0] || "Staff";
+  const avatarUrl = user?.user_metadata?.avatar_url || user?.user_metadata?.picture || null;
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -17,7 +23,7 @@ export function StaffTopbar({ name }: { name: string }) {
 
   const initials = name
     .split(" ")
-    .map((n) => n[0])
+    .map((n: string) => n[0])
     .slice(0, 2)
     .join("")
     .toUpperCase();
@@ -46,9 +52,18 @@ export function StaffTopbar({ name }: { name: string }) {
           <IconBell className="h-4.5 w-4.5" />
         </Link>
         <div className="flex items-center gap-2.5 rounded-full border border-teal-900/10 dark:border-slate-800 py-1.5 pl-1.5 pr-3.5 bg-white dark:bg-slate-900/50">
-          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-teal-500 text-[11px] font-semibold text-white">
-            {initials}
-          </div>
+          {avatarUrl && !imgError ? (
+            <img
+              src={avatarUrl}
+              alt={name}
+              onError={() => setImgError(true)}
+              className="h-7 w-7 flex-none rounded-full object-cover ring-1 ring-teal-500/20"
+            />
+          ) : (
+            <div className="flex h-7 w-7 flex-none items-center justify-center rounded-full bg-teal-500 text-[11px] font-semibold text-white">
+              {initials}
+            </div>
+          )}
           <div className="leading-tight">
             <p className="text-sm font-medium text-ink dark:text-slate-100">{name}</p>
             <p className="text-xs text-slate-650/60 dark:text-slate-400">Authenticated</p>

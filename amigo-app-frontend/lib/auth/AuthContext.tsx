@@ -11,7 +11,8 @@ interface AuthContextType {
   session: Session | null;     // The Supabase session (contains the access_token JWT)
   loading: boolean;            // True while we check if user is already logged in
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
-  signUp: (email: string, password: string) => Promise<{ error: string | null }>;
+  signUp: (email: string, password: string) => Promise<{ data: any; error: string | null }>;
+  signInWithGoogle: () => Promise<{ error: string | null }>;
   logOut: () => Promise<void>;
 }
 
@@ -20,7 +21,8 @@ const AuthContext = createContext<AuthContextType>({
   session: null,
   loading: true,
   signIn: async () => ({ error: null }),
-  signUp: async () => ({ error: null }),
+  signUp: async () => ({ data: null, error: null }),
+  signInWithGoogle: async () => ({ error: null }),
   logOut: async () => {},
 });
 
@@ -59,7 +61,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Sign up a new user with email and password
   const signUp = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({ email, password });
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/dashboard`,
+      },
+    });
+    return { data, error: error?.message ?? null };
+  };
+
+  // Sign in / Sign up with Google OAuth via Supabase
+  const signInWithGoogle = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`,
+      },
+    });
     return { error: error?.message ?? null };
   };
 
@@ -71,7 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signIn, signUp, logOut }}>
+    <AuthContext.Provider value={{ user, session, loading, signIn, signUp, signInWithGoogle, logOut }}>
       {children}
     </AuthContext.Provider>
   );

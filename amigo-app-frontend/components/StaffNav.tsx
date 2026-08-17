@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Brand } from "@/components/Logo";
@@ -30,13 +31,22 @@ export function StaffNav() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, logOut } = useAuth();
-  
-  const name = user?.email?.split("@")[0] || "Staff";
+  const [imgError, setImgError] = useState(false);
+
+  const name = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split("@")[0] || "Staff";
+  const avatarUrl = user?.user_metadata?.avatar_url || user?.user_metadata?.picture || null;
 
   async function logout() {
     await logOut();
     router.replace("/login");
   }
+
+  const initials = name
+    .split(" ")
+    .map((n: string) => n[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
 
   return (
     <aside className="sticky top-0 flex h-screen w-72 flex-none flex-col overflow-y-auto border-r border-teal-900/5 dark:border-slate-800/80 bg-white dark:bg-[#111C21] px-4 py-6 transition-colors">
@@ -72,14 +82,18 @@ export function StaffNav() {
 
       <div className="border-t border-teal-900/5 dark:border-slate-800/80 pt-4">
         <div className="flex items-center gap-3 px-1">
-          <div className="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-teal-500 text-xs font-semibold text-white">
-            {name
-              .split(" ")
-              .map((n) => n[0])
-              .slice(0, 2)
-              .join("")
-              .toUpperCase()}
-          </div>
+          {avatarUrl && !imgError ? (
+            <img
+              src={avatarUrl}
+              alt={name}
+              onError={() => setImgError(true)}
+              className="h-9 w-9 flex-none rounded-full object-cover ring-1 ring-teal-500/20"
+            />
+          ) : (
+            <div className="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-teal-500 text-xs font-semibold text-white">
+              {initials}
+            </div>
+          )}
           <div className="min-w-0">
             <p className="truncate text-sm font-medium text-ink dark:text-slate-100">{name}</p>
             <p className="text-xs text-slate-650/70 dark:text-slate-400">Hospital staff</p>
