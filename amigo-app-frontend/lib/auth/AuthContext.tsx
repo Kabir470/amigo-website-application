@@ -26,22 +26,27 @@ const AuthContext = createContext<AuthContextType>({
   logOut: async () => {},
 });
 
+const getURL = () => {
+  let url =
+    process.env.NEXT_PUBLIC_SITE_URL ??
+    (typeof window !== "undefined" ? window.location.origin : "http://localhost:3000");
+  url = url.startsWith("http") ? url : `https://${url}`;
+  url = url.endsWith("/") ? url.slice(0, -1) : url;
+  return url;
+};
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // On app load, check if the user already has an active session (e.g., they refreshed the page).
-    // Supabase stores the session in localStorage automatically.
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
-    // Listen for auth state changes (login, logout, token refresh).
-    // Supabase automatically refreshes expired tokens in the background!
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setSession(session);
@@ -49,34 +54,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
-    // Cleanup the listener when the component unmounts
     return () => subscription.unsubscribe();
   }, []);
 
-  // Sign in with email and password using Supabase Auth
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     return { error: error?.message ?? null };
   };
 
-  // Sign up a new user with email and password
   const signUp = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/dashboard`,
+        emailRedirectTo: `${getURL()}/dashboard`,
       },
     });
     return { data, error: error?.message ?? null };
   };
 
-  // Sign in / Sign up with Google OAuth via Supabase
   const signInWithGoogle = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/dashboard`,
+        redirectTo: `${getURL()}/dashboard`,
       },
     });
     return { error: error?.message ?? null };
