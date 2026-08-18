@@ -11,15 +11,6 @@ using DotNetEnv;
 // Load environment variables from the .env file
 Env.Load();
 
-// ── CRITICAL: must be set BEFORE CreateBuilder is called ──────────────────────
-// WebApplication.CreateBuilder() internally calls ApplyDefaultAppConfiguration
-// which registers FileSystemWatcher (inotify) on appsettings.json.
-// On Render.com shared-kernel containers the inotify limit (128) is exhausted,
-// causing an unhandled IOException at startup before any user code runs.
-// Setting this env-var tells the host builder to use reloadOnChange: false
-// for all default JSON config sources, preventing any inotify slots being used.
-Environment.SetEnvironmentVariable("hostBuilder__reloadConfigOnChange", "false");
-
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.

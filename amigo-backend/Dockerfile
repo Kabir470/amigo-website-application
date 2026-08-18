@@ -23,4 +23,12 @@ COPY --from=build /app/publish .
 EXPOSE 8080
 ENV ASPNETCORE_URLS=http://+:8080
 
+# Disable inotify-based config file watching.
+# Render.com shared-kernel containers have a hard limit of 128 inotify instances across ALL
+# containers on the same host. When the host is busy this limit is exhausted and the .NET
+# host builder crashes with IOException before any user code runs.
+# DOTNET_hostBuilder__reloadConfigOnChange=false tells the ASP.NET Core host builder to use
+# reloadOnChange:false for all default appsettings.json sources — consuming zero inotify slots.
+ENV DOTNET_hostBuilder__reloadConfigOnChange=false
+
 ENTRYPOINT ["dotnet", "Amigo.Api.dll"]
